@@ -116,7 +116,7 @@ int main()
 		double obj = 0.5*xt::eval(xt::norm_sq(xt::linalg::dot(A,z) - b, {0}))(0);
 		obj += lambda*xt::eval(xt::norm_l1(z, {0}))(0);
 
-		std::printf("%3d %10.4f %10.4f %10.4f %10.4f %10.4f\n", iter, prires, eps_pri, dualres, eps_dual, obj+reg);
+		std::printf("%3d %10.4f %10.4f %10.4f %10.4f %10.4f\n", iter, prires, eps_pri, dualres, eps_dual, obj);
 
 		if((prires <= eps_pri) && (dualres <= eps_dual)){
 			break;
