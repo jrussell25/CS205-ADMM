@@ -19,7 +19,7 @@
 
 
 
-int main()
+int main(int argc, char *argv[])
 {
 	std::ifstream Afile, bfile;
 	Afile.open("A.csv");
@@ -85,6 +85,21 @@ int main()
 	
 	int iter = 0;
 	std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
+
+	//initialize MPI
+    int ierr = MPI_Init(&argc, &argv);
+    int num_proc;  //number of processes
+    int mpi_rank;  //MPI process id
+    if ( ierr != 0 )
+    {
+        std::cout << "\n";
+        std::cout << "MPI - Fatal error!\n";
+        std::cout << "MPI_Init returned nonzero ierr.\n";
+        exit (1);
+    }
+
+    ierr = MPI_Comm_size (MPI_COMM_WORLD, &num_proc);
+    ierr = MPI_Comm_rank (MPI_COMM_WORLD, &mpi_rank);
 
 	while (iter < MAX_ITER) {
 		// u update	
