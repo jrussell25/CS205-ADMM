@@ -1,3 +1,4 @@
+#include <mpi.h>
 #include <istream>
 #include <ostream>
 #include <fstream>
@@ -13,6 +14,10 @@
 #include "xtensor/xmanipulation.hpp"
 #include "xtensor/xnorm.hpp"
 #include "xtensor-blas/xlinalg.hpp"
+
+
+
+
 
 int main()
 {
