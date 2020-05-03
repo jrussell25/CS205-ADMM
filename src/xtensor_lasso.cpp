@@ -62,9 +62,9 @@ int main()
 	xt::xtensor<double, 1> x = xt::zeros<double>({n});
 	xt::xtensor<double, 1> u = xt::zeros<double>({n});
 	xt::xtensor<double, 1> z = xt::zeros<double>({n});
-	xt::xtensor<double, 1> y = xt::zeros<double>({n});
+	//xt::xtensor<double, 1> y = xt::zeros<double>({n});
 	xt::xtensor<double, 1> r = xt::zeros<double>({n});
-	xt::xtensor<double, 1> zdiff = xt::zeros<double>({n});
+	//xt::xtensor<double, 1> zdiff = xt::zeros<double>({n});
 
 
 	xt::xtensor<double,1> Atb = xt::linalg::dot(xt::transpose(A), b);
@@ -74,7 +74,9 @@ int main()
 	auto AAt = xt::linalg::dot(A,xt::transpose(A));
 	// xtensor doesnt natively have cholesky solve so this is unneccessary for now
 	//xt::xtensor<double, 2> L = xt::linalg::cholesky(eye_m +(1./rho)*AtA);
-	xt::xtensor<double, 2> LLt = eye_m + (1./rho)*AAt;
+	xt::xtensor<double, 2> LUinv = xt::linalg::inv(eye_m + (1./rho)*AAt);
+	// In boyd/matlab notation LUinv = U \ L \
+	// precompute this instead of cholesky factor
 	
 	int iter = 0;
 	std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
@@ -89,7 +91,7 @@ int main()
 		//std::cout << "||q||_2 " << xt::linalg::norm(q,2) << std::endl;
 
 		auto Aq = xt::linalg::dot(A,q);
-		auto p = xt::linalg::solve(LLt,Aq);
+		auto p = xt::linalg::dot(LUinv,Aq);//Just precompute the entire inverse rather than chol factor
 		auto xtemp = xt::linalg::dot(xt::transpose(A) ,p);
 		//std::cout << "||A^Tp||_2 " << xt::linalg::norm(xtemp,2) << std::endl;
 
@@ -113,8 +115,12 @@ int main()
 		eps_pri = sqrt(n)*ABSTOL + RELTOL*fmax(nxstack, xt::linalg::norm(z, 2));
 		eps_dual = sqrt(n)*ABSTOL + RELTOL*nystack;
 
-		double obj = 0.5*xt::eval(xt::norm_sq(xt::linalg::dot(A,z) - b, {0}))(0);
-		obj += lambda*xt::eval(xt::norm_l1(z, {0}))(0);
+		/*
+		 * double obj = 0.5*xt::eval(xt::norm_sq(xt::linalg::dot(A,z) - b, {0}))(0);
+		 * obj += lambda*xt::eval(xt::norm_l1(z, {0}))(0);
+		 */
+		double Azb_nrm = xt::linalg::norm(xt::linalg::dot(A,z)-b, 2);
+		double obj = 0.5*Azb_nrm*Azb_nrm + lambda*xt::linalg::norm(z,1);
 
 		std::printf("%3d %10.4f %10.4f %10.4f %10.4f %10.4f\n", iter, prires, eps_pri, dualres, eps_dual, obj);
 
