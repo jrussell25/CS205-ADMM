@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
 	
 	void soft_threshold(xt::xtensor<double, 1> &v, const double a);
     void xtensor2array(const xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
+    void array2xtensor(xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
 
 	int m = sA(0);
 	int n = sA(1);
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
 		x = (1./rho)*q - (1./(rho*rho))*xtemp;
 		//std::cout <<"||x||_2 " << xt::linalg::norm(x,2) << std::endl;
 
-		auto w = x+u;
+        xt::xtensor<double, 1> w = x+u;
 		//Message passing should go here
 
 		send[0] = xt::linalg::vdot(r, r);
@@ -144,6 +145,8 @@ int main(int argc, char *argv[])
         MPI_Allreduce(mpi_w_ptr, mpi_z_ptr,  n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(send,    recv,     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
+        array2xtensor(w, mpi_w_ptr);
+        array2xtensor(z, mpi_z_ptr);
         /**
 		prires = xt::linalg::norm(r, 2);
 		nxstack = xt::linalg::norm(x, 2);
@@ -201,6 +204,14 @@ void xtensor2array(const xt::xtensor<double, 1> &x, double* ptr){
     int n = s(0);
     for (int i = 0; i < n; i++){
         ptr[i] = x(i);
+    }
+}
+
+void array2xtensor(xt::xtensor<double, 1> &x, double* ptr){
+    auto s = xt::adapt(x.shape());
+    int n = s(0);
+    for (int i = 0; i < n; i++){
+        x(i) = ptr[i];
     }
 }
 
