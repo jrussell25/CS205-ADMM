@@ -21,6 +21,21 @@
 
 int main(int argc, char *argv[])
 {
+    //initialize MPI
+    int ierr = MPI_Init(&argc, &argv);
+    int size;  //number of processes
+    int rank;  //MPI process id
+    if (ierr != 0) {
+        std::cout << "\n";
+        std::cout << "MPI - Fatal error!\n";
+        std::cout << "MPI_Init returned nonzero ierr.\n";
+        exit(1);
+    }
+
+    ierr = MPI_Comm_size(MPI_COMM_WORLD, &size);
+    ierr = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    double N = (double) size;  // Number of subsystems/slaves for ADMM
+
 	std::ifstream Afile, bfile;
 	Afile.open("A.csv");
 	bfile.open("b.csv");
@@ -39,7 +54,8 @@ int main(int argc, char *argv[])
 	// The above was mostly just checking and testing. Below is the implementation
 	// Im trying to follow boyd as closely as possible and not worrying about MPI for now
 	
-	void soft_threshold(xt::xtensor<double, 1> &v, double a);
+	void soft_threshold(xt::xtensor<double, 1> &v, const double a);
+    void xtensor2array(const xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
 
 	int m = sA(0);
 	int n = sA(1);
@@ -53,6 +69,9 @@ int main(int argc, char *argv[])
   	 * to 0.5 for simplicity. Using the lambda_max heuristic would require 
   	 * network communication, since it requires looking at the *global* A^T b.
   	 */
+	double send[3]; // an array used to aggregate 3 scalars at once
+	double recv[3]; // used to receive the results of these aggregations
+
 	double lambda = 0.5;	
 	double rho = 1.0;
 	double prires = 0;
@@ -71,6 +90,9 @@ int main(int argc, char *argv[])
 	xt::xtensor<double, 1> r = xt::zeros<double>({n});
 	//xt::xtensor<double, 1> zdiff = xt::zeros<double>({n});
 
+    double* mpi_w_ptr = new double[n];   //double array for holding vector sending with MPI
+    double* mpi_z_ptr = new double[n];
+
 
 	xt::xtensor<double,1> Atb = xt::linalg::dot(xt::transpose(A), b);
 	//skip the skinny check for now, assume the matrix is fat
@@ -86,20 +108,9 @@ int main(int argc, char *argv[])
 	int iter = 0;
 	std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
 
-	//initialize MPI
-    int ierr = MPI_Init(&argc, &argv);
-    int num_proc;  //number of processes
-    int mpi_rank;  //MPI process id
-    if ( ierr != 0 )
-    {
-        std::cout << "\n";
-        std::cout << "MPI - Fatal error!\n";
-        std::cout << "MPI_Init returned nonzero ierr.\n";
-        exit (1);
-    }
-
-    ierr = MPI_Comm_size (MPI_COMM_WORLD, &num_proc);
-    ierr = MPI_Comm_rank (MPI_COMM_WORLD, &mpi_rank);
+	//print rank of each process
+    std::cout << "\n";
+    std::cout << "Rank: " << rank << std::endl;
 
 	while (iter < MAX_ITER) {
 		// u update	
@@ -120,10 +131,21 @@ int main(int argc, char *argv[])
 
 		auto w = x+u;
 		//Message passing should go here
-		
+
+		send[0] = xt::linalg::vdot(r, r);
+		send[1] = xt::linalg::vdot(x, x);
+		send[2] = xt::linalg::vdot(u, u) / pow(rho, 2);
+
+        //copy xtensor to double array
+        xtensor2array(w, mpi_w_ptr);
+        xtensor2array(z, mpi_z_ptr);
+
+        MPI_Allreduce(mpi_w_ptr, mpi_z_ptr,  n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(send,    recv,     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
 		prires = xt::linalg::norm(r, 2);
 		nxstack = xt::linalg::norm(x, 2);
-		nystack = xt::linalg::norm(u,2)/rho;
+		nystack = xt::linalg::norm(u,2) / rho;
 
 		auto zprev = z;
 		z = w;
@@ -155,13 +177,24 @@ int main(int argc, char *argv[])
 	std::ofstream sol_file;
 	sol_file.open("xt_solution.csv");
 	xt::dump_csv(sol_file, xt::expand_dims(z,1));
+
+    MPI_Finalize();
+    delete[] mpi_w_ptr;
+    delete[] mpi_z_ptr;
 	return 0;
 }
 
-void soft_threshold(xt::xtensor<double,1> &v, double a){
+void soft_threshold(xt::xtensor<double,1> &v, const double a){
 	xt::filtration(v, xt::abs(v)<=a) = 0;
 	xt::filtration(v, v>a) -= a;
 	xt::filtration(v, v<-1*a) += a;
-	
+}
+
+void xtensor2array(const xt::xtensor<double, 1> &x, double* ptr){
+    auto s = xt::adapt(x.shape());
+    int n = s(0);
+    for (int i = 0; i < n; i++){
+        ptr[i] = x(i);
+    }
 }
 
