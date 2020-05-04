@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 		send[1] = xt::linalg::vdot(x, x);
 		send[2] = xt::linalg::vdot(u, u) / pow(rho, 2);
 
+        auto zprev = z;
         //copy xtensor to double array
         xtensor2array(w, mpi_w_ptr);
         xtensor2array(z, mpi_z_ptr);
@@ -143,19 +144,24 @@ int main(int argc, char *argv[])
         MPI_Allreduce(mpi_w_ptr, mpi_z_ptr,  n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(send,    recv,     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
+        /**
 		prires = xt::linalg::norm(r, 2);
 		nxstack = xt::linalg::norm(x, 2);
 		nystack = xt::linalg::norm(u,2) / rho;
+        **/
+        prires = sqrt(recv[0]);
+        nxstack = sqrt(recv[1]);
+        nystack = sqrt(recv[2]);
 
-		auto zprev = z;
-		z = w;
-		soft_threshold(z, lambda/rho);
+		//z = w;  //macheng: z = w? Was this correct?
+		z = z / N;
+		soft_threshold(z, lambda/(N*rho));
 		auto zdiff = z - zprev;
 		//std::cout << "||z||_2 " << xt::linalg::norm(z,2) << std::endl; 
-		dualres = rho*xt::linalg::norm(zdiff, 2);	
+		dualres = sqrt(N) * rho * xt::linalg::norm(zdiff, 2);
 
-		eps_pri = sqrt(n)*ABSTOL + RELTOL*fmax(nxstack, xt::linalg::norm(z, 2));
-		eps_dual = sqrt(n)*ABSTOL + RELTOL*nystack;
+		eps_pri = sqrt(n * N)*ABSTOL + RELTOL*fmax(nxstack, xt::linalg::norm(z, 2));
+		eps_dual = sqrt(n * N)*ABSTOL + RELTOL*nystack;
 
 		/*
 		 * double obj = 0.5*xt::eval(xt::norm_sq(xt::linalg::dot(A,z) - b, {0}))(0);
