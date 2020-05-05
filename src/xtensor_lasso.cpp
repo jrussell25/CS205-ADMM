@@ -3,6 +3,7 @@
 #include <ostream>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include "xtensor/xtensor.hpp"
 #include "xtensor/xarray.hpp"
@@ -17,7 +18,7 @@
 
 
 
-
+std::string DATA_DIR("./data/");
 
 int main(int argc, char *argv[])
 {
@@ -37,8 +38,10 @@ int main(int argc, char *argv[])
     double N = (double) size;  // Number of subsystems/slaves for ADMM
 
 	std::ifstream Afile, bfile;
-	Afile.open("A.csv");
-	bfile.open("b.csv");
+	std::string Afile_name(DATA_DIR + "A" + std::to_string(rank) + ".csv");
+	std::string bfile_name(DATA_DIR + "b" + std::to_string(rank) + ".csv");
+	Afile.open(Afile_name);
+	bfile.open(bfile_name);
 	auto Ain = xt::load_csv<double>(Afile);
 	auto bin = xt::load_csv<double>(bfile);
 	
@@ -107,12 +110,13 @@ int main(int argc, char *argv[])
 	// precompute this instead of cholesky factor
 	
 	int iter = 0;
-	std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
-
-	//print rank of each process
+	if (rank == 0) {
+        std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
+    }
+	/**print rank of each process
     std::cout << "\n";
     std::cout << "Rank: " << rank << std::endl;
-
+    **/
 	while (iter < MAX_ITER) {
 		// u update	
 		u += x - z;
@@ -173,7 +177,9 @@ int main(int argc, char *argv[])
 		double Azb_nrm = xt::linalg::norm(xt::linalg::dot(A,z)-b, 2);
 		double obj = 0.5*Azb_nrm*Azb_nrm + lambda*xt::linalg::norm(z,1);
 
-		std::printf("%3d %10.4f %10.4f %10.4f %10.4f %10.4f\n", iter, prires, eps_pri, dualres, eps_dual, obj);
+		if (rank == 0){
+			std::printf("%3d %10.4f %10.4f %10.4f %10.4f %10.4f\n", iter, prires, eps_pri, dualres, eps_dual, obj);
+		}
 
 		if((prires <= eps_pri) && (dualres <= eps_dual)){
 			break;
@@ -184,12 +190,16 @@ int main(int argc, char *argv[])
 		iter++;
 	}
 	std::ofstream sol_file;
-	sol_file.open("xt_solution.csv");
+	//std::string sol_file_name(DATA_DIR + "xt_solution" + std::to_string(rank) + ".csv");
+    std::string sol_file_name(DATA_DIR + "xt_solution" + ".csv");
+	sol_file.open(sol_file_name);
 	xt::dump_csv(sol_file, xt::expand_dims(z,1));
 
     MPI_Finalize();
+
     delete[] mpi_w_ptr;
     delete[] mpi_z_ptr;
+
 	return 0;
 }
 
