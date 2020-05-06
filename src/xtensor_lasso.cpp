@@ -64,9 +64,9 @@ int main(int argc, char *argv[])
 	int m = sA(0);
 	int n = sA(1);
 	bool skinny = sA(1)>sA(0);
-	const int MAX_ITER  = 50;
- 	const double RELTOL = 1e-2;
-	const double ABSTOL = 1e-4;
+	const int MAX_ITER  = 100;
+ 	const double RELTOL = 1e-3;
+	const double ABSTOL = 1e-5;
 	
 	/*
   	 * The lasso regularization parameter here is just hardcoded
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	double send[3]; // an array used to aggregate 3 scalars at once
 	double recv[3]; // used to receive the results of these aggregations
 
-	double lambda = 0.5;	
+	double lambda;// use global lambda max heuristic = 0.5;	
 	double rho = 1.0;
 	double prires = 0;
 	double dualres = 0;
@@ -99,6 +99,12 @@ int main(int argc, char *argv[])
 
 
 	xt::xtensor<double,1> Atb = xt::linalg::dot(xt::transpose(A), b);
+
+	double lambda_max_local = xt::linalg::norm(Atb,xt::linalg::normorder::inf);	
+
+	MPI_Allreduce(&lambda_max_local, &lambda, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+	lambda = 0.1*lambda;
+
 	//skip the skinny check for now, assume the matrix is fat
 	/* L = chol(I + 1/rho*AAt) */
 	auto eye_m = xt::eye(m);	
@@ -111,6 +117,8 @@ int main(int argc, char *argv[])
 	
 	int iter = 0;
 	if (rank == 0) {
+	std::cout << "Using 0.1 x Lambda max heuristic: lambda = " << lambda << std::endl;
+
         std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
     }
 	/**print rank of each process
