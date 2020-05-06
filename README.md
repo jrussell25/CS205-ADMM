@@ -11,8 +11,12 @@ a fresh conda environment.
 
 ```conda install -c conda-forge xtensor xtensor-blas xsimd```
 
+In addition to these libraries, we use CMake to compile our code and Intel's C++ compiler, 
+Math Kernel Library, and MPI Implementation. This software is all available on the Harvard Cluster.
+The script `gogo_modules.sh` will load them all using the LMod package manager.
+
 Before compiling our code you need to tell cmake where the xtensor headers live. 
-On the Harvard cluster, where user created conda environments like in 
+On the Harvard cluster, where user created conda environments live in 
 `~/.conda`, one should run 
 
 ```cmake -DCMAKE_INSTALL_PREFIX=~/.conda/envs/your_xtensor_env_name```.
