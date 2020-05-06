@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 		//std::cout << "||z||_2 " << xt::linalg::norm(z,2) << std::endl; 
 		dualres = sqrt(N) * rho * xt::linalg::norm(zdiff, 2);
 
-		eps_pri = sqrt(n * N)*ABSTOL + RELTOL*fmax(nxstack, xt::linalg::norm(z, 2));
+		eps_pri = sqrt(n * N)*ABSTOL + RELTOL*fmax(nxstack, xt::linalg::norm(z, 2)*sqrt(N));
 		eps_dual = sqrt(n * N)*ABSTOL + RELTOL*nystack;
 
 		/*
