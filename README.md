@@ -37,5 +37,17 @@ Consider the equality-constrained convex optimization problem
  <img src="figures/opt_problem.png" height="50">
 </p>
 
+The corresponding Lagrangian dual function is defined as 
+
+<p align="center">
+ <img src="figures/dual_func.png" height="30">
+</p>
+
+Assuming strong duality holds, the primal optimizer can be recovered by first finding the dual optimizer as follows
+
+<p align="center">
+ <img src="figures/primal_recovery.png" height="30">
+</p>
+
 
 
