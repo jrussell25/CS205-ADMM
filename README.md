@@ -49,5 +49,11 @@ Assuming strong duality holds, the primal optimizer can be recovered by first fi
  <img src="figures/primal_recovery.png" height="30">
 </p>
 
+The *dual ascent method* is inspired by this idea, following the two steps: (1) Update the dual variable by ascending in the dual gradient direction, which equals to the residual of the equlity constraint, (2) Update the primal variable by minimizing the Lagrangian, fixing the dual variable:
+
+<p align="center">
+ <img src="figures/dual_ascent.png" height="30">
+</p>
+
 
 
