@@ -28,7 +28,7 @@ Example for running the generate_lasso_data.py:
 
 # Dirtributed ADMM
 
-In order to discuss distributed implementation of ADMM, we start with introducing two optimization schemes, known as dual Ascent and augmented Lagrangian, as the fundations to ADMM.
+In order to discuss distributed implementation of ADMM, we start with introducing the preliminaries: Dual Ascent, Dual Decomposition and augmented Lagrangian, as the fundations to ADMM.
 
 ## Dual Ascent
 
@@ -55,5 +55,23 @@ The *dual ascent method* is inspired by this idea, following the two steps: (1) 
  <img src="figures/dual_ascent.png" height="50">
 </p>
 
+## Dual Decomposition
 
+Consider special problems where the objective function is *separable* with respect to a partition of the primal variable (which is often the case in machine learning problems where the objective function is a summation of local cost functions w.r.t. data sample):
+
+<p align="center">
+ <img src="figures/separable.png" height="35">
+</p>
+
+In this case, the Lagrangian can also be decomposed
+
+<p align="center">
+ <img src="figures/decomp_largrangian.png" height="35">
+</p>
+
+This decomposition leads to a separation of the update rule, which is referred to as *dual decomposition*
+
+<p align="center">
+ <img src="figures/dual_decomposition.png" height="50">
+</p>
 
