@@ -34,5 +34,5 @@ In order to discuss distributed implementation of ADMM, we start with introducin
 
 Consider the equality-constrained convex optimization problem 
 
-![](figures/opt_problem.png){:height="20%" width="20%"}
+![|200x100](figures/opt_problem.png)
 
