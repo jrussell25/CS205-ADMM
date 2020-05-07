@@ -24,3 +24,15 @@ On the Harvard cluster, where user created conda environments live in
 Example for running the generate_lasso_data.py:
 
 ```python3 generate_lasso_data.py 160 500 30 1```
+
+
+# Dirtributed ADMM
+
+In order to discuss distributed implementation of ADMM, we start with introducing two optimization schemes, known as dual Ascent and augmented Lagrangian, as the fundations to ADMM.
+
+## Dual Ascent
+
+Consider the equality-constrained convex optimization problem 
+
+![/figures/opt_problem.png]
+
