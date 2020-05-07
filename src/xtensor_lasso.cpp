@@ -262,8 +262,8 @@ void ComputeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
         }
     }
     double zero_keeping_rate=num_zero_result/ (double) num_zero_true;
-    std::cout<<"|x| norm 1 sum of error:"<<err_abs_sum<<std::endl;
-    std::cout<<"|x| norm 1 sum of true solution:"<<ts_abs_sum<<std::endl;
+    std::cout<<"L1 norm of error:"<<err_abs_sum<<std::endl;
+    std::cout<<"L1 norm of true solution:"<<ts_abs_sum<<std::endl;
     std::cout<<"Number of 0 in calculated solution:"<<num_zero_result<<std::endl;
     std::cout<<"Number of 0 in true solution:"<<num_zero_true<<std::endl;
     std::cout<<"Percentage of keeping zeros:"<<zero_keeping_rate<<std::endl;
