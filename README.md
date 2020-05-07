@@ -33,8 +33,9 @@ In order to discuss distributed implementation of ADMM, we start with introducin
 ## Dual Ascent
 
 Consider the equality-constrained convex optimization problem 
-
-<img src="figures/opt_problem.png" height="50">
+<p align="center">
+ <img src="figures/opt_problem.png" height="50">
+</p>
 
 
 
