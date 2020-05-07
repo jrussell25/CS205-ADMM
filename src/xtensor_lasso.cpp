@@ -213,9 +213,10 @@ int main(int argc, char *argv[])
 
     delete[] mpi_w_ptr;
     delete[] mpi_z_ptr;
-    void computeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol);
-    computeError(z,true_sol);
-
+    void ComputeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol);
+    if (rank == 0){
+        ComputeError(z,true_sol);
+    }
 	return 0;
 }
 
@@ -241,7 +242,7 @@ void array2xtensor(xt::xtensor<double, 1> &x, double* ptr){
     }
 }
 
-void computeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
+void ComputeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
     auto err=true_sol-z;
     double eps=0.01;
     int n=z.size();
