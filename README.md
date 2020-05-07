@@ -21,6 +21,6 @@ On the Harvard cluster, where user created conda environments live in
 
 ```cmake -DCMAKE_INSTALL_PREFIX=~/.conda/envs/your_xtensor_env_name```.
 
-# Example for running the generate_lasso_data.py:
+Example for running the generate_lasso_data.py:
 
-python3 generate_lasso_data.py 160 500 30 1
+```python3 generate_lasso_data.py 160 500 30 1```
