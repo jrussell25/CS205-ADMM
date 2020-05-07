@@ -38,15 +38,20 @@ int main(int argc, char *argv[])
     double N = (double) size;  // Number of subsystems/slaves for ADMM
 
 	std::ifstream Afile, bfile;
+	std::ifstream true_sol_file;
 	std::string Afile_name(DATA_DIR + "A" + std::to_string(rank) + ".csv");
 	std::string bfile_name(DATA_DIR + "b" + std::to_string(rank) + ".csv");
+	std::string true_solution_name(DATA_DIR+"xtrue.csv");
 	Afile.open(Afile_name);
 	bfile.open(bfile_name);
+	true_sol_file.open(true_solution_name);
 	auto Ain = xt::load_csv<double>(Afile);
 	auto bin = xt::load_csv<double>(bfile);
-	
+	auto true_sol_in=xt::load_csv<double>(true_sol_file);
+
 	xt::xtensor<double, 2> A = Ain;
 	xt::xtensor<double, 1> b = xt::squeeze(bin);
+	xt::xtensor<double, 1> true_sol = xt::squeeze(true_sol_in);
 
 	auto sA = xt::adapt(A.shape());
 	std::cout << "Size of A matrix:" << sA << std::endl;
@@ -60,6 +65,7 @@ int main(int argc, char *argv[])
 	void soft_threshold(xt::xtensor<double, 1> &v, const double a);
     void xtensor2array(const xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
     void array2xtensor(xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
+
 
 	int m = sA(0);
 	int n = sA(1);
@@ -207,6 +213,8 @@ int main(int argc, char *argv[])
 
     delete[] mpi_w_ptr;
     delete[] mpi_z_ptr;
+    void computeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol);
+    computeError(z,true_sol);
 
 	return 0;
 }
@@ -231,5 +239,34 @@ void array2xtensor(xt::xtensor<double, 1> &x, double* ptr){
     for (int i = 0; i < n; i++){
         x(i) = ptr[i];
     }
+}
+
+void computeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
+    auto err=true_sol-z;
+    double eps=0.01;
+    int n=z.size();
+    xt::xarray<double> z_abs=xt::abs(z);
+    xt::xarray<double> err_abs=xt::abs(err);
+    xt::xarray<double> ts_abs =xt::abs(true_sol);
+    xt::xarray<double> err_abs_sum = xt::sum(err_abs);
+    xt::xarray<double> ts_abs_sum  = xt::sum(ts_abs);
+    int num_zero_result=0;
+    int num_zero_true=0;
+    for(int i=0; i<n;i+=1){
+        if(z[i]<eps && ts_abs[i]<eps){
+            num_zero_result+=1;
+        }
+        if(ts_abs[i]<eps){
+            num_zero_true+=1;
+        }
+    }
+    double zero_keeping_rate=num_zero_result/ (double) num_zero_true;
+    std::cout<<"|x| norm 1 sum of error:"<<err_abs_sum<<std::endl;
+    std::cout<<"|x| norm 1 sum of true solution:"<<ts_abs_sum<<std::endl;
+    std::cout<<"Number of 0 in calculated solution:"<<num_zero_result<<std::endl;
+    std::cout<<"Number of 0 in true solution:"<<num_zero_true<<std::endl;
+    std::cout<<"Percentage of keeping zeros:"<<zero_keeping_rate<<std::endl;
+
+    return;
 }
 
