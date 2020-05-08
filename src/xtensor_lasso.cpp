@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     void soft_threshold(xt::xtensor<double, 1> &v, const double a);
     void xtensor2array(const xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
     void array2xtensor(xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
-    void computeError(xt::xtensor<double, 1> &z, xt::xtensor<double,1> &true_sol);
+    void ComputeError(xt::xtensor<double, 1> &z, xt::xtensor<double,1> &true_sol);
 
     int m = sA(0);
     int n = sA(1);
