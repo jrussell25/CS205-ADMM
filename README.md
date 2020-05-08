@@ -95,3 +95,5 @@ The dual decomposition update rule with augmented penalty is
 
 Note that the dual update step size is now the penalty parameter. The reason of making this choice is to make sure that each iteration the pair of the primal and dual variable is dual feasible. The primal minimization problem is changed to the Lagrangian with the penalty term. This is referred to as *the method of multiplers*. The method converges under far more general conditions than dual ascent.
 
+Reproductivity parameter:
+Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 Intel(R) Xeon(R) Gold 6134 16 cores CPU @ 3.20GHz
