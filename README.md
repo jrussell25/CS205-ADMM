@@ -82,7 +82,7 @@ This form is desirable for distributed optimization.
 The problem of dual decomposition is that it requires strict convexity and finiteness of the objective function for convergence, which is a quite strong assumption in reality that can be difficult to satisfy. The augmented Lagrangian method was developed to make dual ascent method more robust to yield convergence without satisfying those strict requirements. This is done by adding an additional quadratic penalty term to the original objective function
 
 <p align="center">
- <img src="figures/augmented_opt_problem.png" height="50">
+ <img src="figures/augmented_opt_problem.png" height="35">
 </p>
 
 As the added penalty term vanishes for all the feasible primal variables, this does not change the result of the optimization.
@@ -101,7 +101,7 @@ Note that the dual update step size is now the penalty parameter. The reason of 
 In this project, we consider L1 regularized linear regression, which is a standard machine learning problem:
 
 <p align="center">
- <img src="figures/lasso.png" height="35">
+ <img src="figures/lasso.png" height="25">
 </p>
 
 The associated ADMM update is as follows:
@@ -119,8 +119,10 @@ The following diagrams illustrate how to distributedly implement the above equat
 </p>
 
 <p align="center">
- <img src="computation_graph.png" height="500">
+ <img src="figures/computation_graph.png" height="500">
 </p>
+
+
 
 
 
