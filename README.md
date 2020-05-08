@@ -124,19 +124,13 @@ The following diagrams illustrate how to distributedly implement the above equat
 
 This distributed implementation can be summarized into 4 key steps:
 
-Initilization:Each node reads in the local matrix data into its local memory, and initlize local deicison variables *x* and *u*.
+- **Initilization**:Each node reads in the local matrix data into its local memory, and initlize local deicison variables *x* and *u*.
 
----
+- **Local optimization**: Each node solves its local optimization problem (in Lasso, this local optimization is a ridge regression).
 
-Local optimization: Each node solves its local optimization problem (in Lasso, this local optimization is a ridge regression).
+- **Global aggregation**: All the nodes communicate their local variables for averaging and broadcast the results back to all the nodes. We use MPI AllReduce to accomplish this aggregation.
 
----
-
-Global aggregation: All the nodes communicate their local variables for averaging and broadcast the results back to all the nodes. We use MPI AllReduce to accomplish this aggregation.
-
----
-
-Synchronization: Synchronization between nodes must be enforced for the correctness of the implementation: All the local variables must be updated before global aggregation, and the local updates must all use the latest global variable.
+- **Synchronization**: Synchronization between nodes must be enforced for the correctness of the implementation: All the local variables must be updated before global aggregation, and the local updates must all use the latest global variable.
 
 
 
