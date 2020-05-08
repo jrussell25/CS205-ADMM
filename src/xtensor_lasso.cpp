@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
     delete[] mpi_w_ptr;
     delete[] mpi_z_ptr;
     if (rank==0){
-        computeError(z,true_sol);
+        ComputeError(z,true_sol);
     }
 
     return 0;
