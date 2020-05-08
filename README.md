@@ -34,19 +34,19 @@ In order to discuss distributed implementation of ADMM, we start with introducin
 
 Consider the equality-constrained convex optimization problem 
 <p align="center">
- <img src="figures/opt_problem.png" height="50">
+ <img src="figures/opt_problem.png" height="35">
 </p>
 
 The corresponding Lagrangian dual function is defined as 
 
 <p align="center">
- <img src="figures/dual_func.png" height="35">
+ <img src="figures/dual_func.png" height="25">
 </p>
 
 Assuming strong duality holds, the primal optimizer can be recovered by first finding the dual optimizer as follows
 
 <p align="center">
- <img src="figures/primal_recovery.png" height="35">
+ <img src="figures/primal_recovery.png" height="30">
 </p>
 
 The *dual ascent method* is inspired by this idea, following the two steps: (1) Update the dual variable by ascending in the dual gradient direction, which equals to the residual of the equlity constraint, (2) Update the primal variable by minimizing the Lagrangian, fixing the dual variable:
@@ -101,7 +101,7 @@ Note that the dual update step size is now the penalty parameter. The reason of 
 In this project, we consider L1 regularized linear regression, which is a standard machine learning problem:
 
 <p align="center">
- <img src="figures/lasso.png" height="25">
+ <img src="figures/lasso.png" height="20">
 </p>
 
 The associated ADMM update is as follows:
@@ -115,12 +115,30 @@ For efficiency consideration, the matrix inversion is calculated at the beginnin
 The following diagrams illustrate how to distributedly implement the above equations by partitioning the data across several nodes.
 
 <p align="center">
- <img src="figures/data_partition.png" height="150">
+ <img src="figures/data_partition.png" height="100">
 </p>
 
 <p align="center">
- <img src="figures/computation_graph.png" height="500">
+ <img src="figures/computation_graph.png" height="300">
 </p>
+
+This distributed implementation can be summarized into 4 key steps:
+
+## Initilization:
+
+Each node reads in the local matrix data into its local memory, and initlize local deicison variables *x* and *u*.
+
+## Local optimization:
+
+Each node solves its local optimization problem (in Lasso, this local optimization is a ridge regression).
+
+## Global aggregation:
+
+All the nodes communicate their local variables for averaging and broadcast the results back to all the nodes. We use MPI AllReduce to accomplish this aggregation.
+
+## Synchronization:
+
+Synchronization between nodes must be enforced for the correctness of the implementation: All the local variables must be updated before global aggregation, and the local updates must all use the latest global variable.
 
 
 
