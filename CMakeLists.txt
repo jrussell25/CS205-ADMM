@@ -20,6 +20,8 @@ find_package(xtensor-blas REQUIRED)
 find_package(MPI REQUIRED)
 
 add_executable(xtensor_lasso src/xtensor_lasso.cpp)
+add_executable(lasso_multithread src/lasso_serial.cpp)
+add_executable(lasso_reg_path src/lasso_reg_path.cpp)
 
 #set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
 #set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
@@ -27,5 +29,13 @@ add_executable(xtensor_lasso src/xtensor_lasso.cpp)
 target_include_directories(xtensor_lasso PRIVATE ${MPI_CXX_INCLUDE_PATH})
 target_compile_options(xtensor_lasso PRIVATE ${MPI_CXX_COMPILE_FLAGS})
 
+target_include_directories(lasso_reg_path PRIVATE ${MPI_CXX_INCLUDE_PATH})
+target_compile_options(lasso_reg_path PRIVATE ${MPI_CXX_COMPILE_FLAGS})
+
+
 target_link_libraries(xtensor_lasso ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS} xtensor xtensor-blas xtensor::optimize ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+
+target_link_libraries(lasso_reg_path ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS} xtensor xtensor-blas xtensor::optimize ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+
+target_link_libraries(lasso_multithread xtensor xtensor-blas xtensor::optimize ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 

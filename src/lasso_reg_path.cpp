@@ -85,7 +85,11 @@ int main(int argc, char *argv[])
     double send[3]; // an array used to aggregate 3 scalars at once
     double recv[3]; // used to receive the results of these aggregations
 
-    double lambda;// use global lambda max heuristic = 0.5;	
+    double lambda;
+    double lambda_max;// use global lambda max heuristic = 0.5;	
+
+    int n_tests = 10;
+    auto reg_factor = xt::linspace(0.01, 0.95, n_tests);
     double rho = 1.0;
     double prires = 0;
     double dualres = 0;
@@ -94,12 +98,15 @@ int main(int argc, char *argv[])
     double nxstack = 0;
     double nystack = 0;
 
+    double best_obj = 100000.;
+
     //We may not actually need many of these in memory given 
     //lazy evaluation. i.e. many could just be autos
     xt::xtensor<double, 1> x = xt::zeros<double>({n});
     xt::xtensor<double, 1> u = xt::zeros<double>({n});
     xt::xtensor<double, 1> z = xt::zeros<double>({n});
     xt::xtensor<double, 1> r = xt::zeros<double>({n});
+    xt::xtensor<double, 1> best_x = xt::zeros<double>({n});
 
     double* mpi_w_ptr = new double[n];   //double array for holding vector sending with MPI
     double* mpi_z_ptr = new double[n];
@@ -109,8 +116,7 @@ int main(int argc, char *argv[])
 
     double lambda_max_local = xt::linalg::norm(Atb,xt::linalg::normorder::inf);	
 
-    MPI_Allreduce(&lambda_max_local, &lambda, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-    lambda = 0.1*lambda;
+    MPI_Allreduce(&lambda_max_local, &lambda_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 
     // xtensors inv uses cholesky factorization under the hood
     // In boyd/matlab notation LUinv = U \ L \
@@ -128,94 +134,103 @@ int main(int argc, char *argv[])
         auto AAt = xt::linalg::dot(A,xt::transpose(A));
         LUinv = xt::linalg::inv(eye_m + (1./rho)*AAt);
     }
+    for(int i=0; i < n_tests; i++){
+        //iterate through regularization parameters
+        //use a warm start for x update i.e. use result from previous run
+        //re initialize all other tensors to 0
 
-    int iter = 0;
-    if (rank == 0) {
-        std::cout << "Using 0.1 x Lambda max heuristic: lambda = " << lambda << std::endl;
-        std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
+        lambda = reg_factor(i)*lambda_max;
+        r = xt::zeros<double>({n});
+
+        int iter = 0;
+        if (rank == 0) {
+            std::cout << "Using lambda = " << lambda << std::endl;
+            std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
+        }
+        
+        while (iter < MAX_ITER) {
+            // u update	
+            u += x - z;
+            //std::cout << "||u||_2 " << xt::linalg::norm(u,2) << std::endl;
+
+            //x update
+            auto q = Atb + rho*(z-u);
+            //std::cout << "||q||_2 " << xt::linalg::norm(q,2) << std::endl;
+            
+            if (skinny){
+                x = xt::linalg::dot(LUinv,q);
+            }
+            else{
+                //use matrix inversion lemma
+                auto Aq = xt::linalg::dot(A,q);
+                auto p = xt::linalg::dot(LUinv,Aq);
+                auto xtemp = xt::linalg::dot(xt::transpose(A) ,p);
+                //std::cout << "||A^Tp||_2 " << xt::linalg::norm(xtemp,2) << std::endl;
+
+                x = (1./rho)*q - (1./(rho*rho))*xtemp;
+                //std::cout <<"||x||_2 " << xt::linalg::norm(x,2) << std::endl;
+            }
+            xt::xtensor<double, 1> w = x+u;
+            //Message passing should go here
+
+            send[0] = xt::linalg::vdot(r, r);
+            send[1] = xt::linalg::vdot(x, x);
+            send[2] = xt::linalg::vdot(u, u) / pow(rho, 2);
+
+            auto zprev = z;
+            //copy xtensor to double array
+            xtensor2array(w, mpi_w_ptr);
+            xtensor2array(z, mpi_z_ptr);
+
+            MPI_Allreduce(mpi_w_ptr, mpi_z_ptr,  n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            MPI_Allreduce(send,    recv,     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+            array2xtensor(w, mpi_w_ptr);
+            array2xtensor(z, mpi_z_ptr);
+            prires = sqrt(recv[0]);
+            nxstack = sqrt(recv[1]);
+            nystack = sqrt(recv[2]);
+
+            z = z / N;
+            soft_threshold(z, lambda/(N*rho));
+            auto zdiff = z - zprev;
+            //std::cout << "||z||_2 " << xt::linalg::norm(z,2) << std::endl; 
+            dualres = sqrt(N) * rho * xt::linalg::norm(zdiff, 2);
+
+            eps_pri = sqrt(n * N)*ABSTOL + RELTOL*fmax(nxstack, xt::linalg::norm(z, 2)*sqrt(N));
+            eps_dual = sqrt(n * N)*ABSTOL + RELTOL*nystack;
+
+            double Azb_nrm = xt::linalg::norm(xt::linalg::dot(A,z)-b, 2);
+            double obj = 0.5*Azb_nrm*Azb_nrm + lambda*xt::linalg::norm(z,1);
+
+            if (rank == 0){
+                std::printf("%3d %10.4f %10.4f %10.4f %10.4f %10.4f\n", iter, prires, eps_pri, dualres, eps_dual, obj);
+            }
+
+            if((prires <= eps_pri) && (dualres <= eps_dual)){
+                //check if we have improved objective
+                //need to compute global objective
+                break;
+            }
+
+            r = x-z;
+            //std::cout << "||r||_2 " << xt::linalg::norm(r,2) << std::endl;
+            iter++;
+        }
+        std::ofstream sol_file;
+        //std::string sol_file_name(DATA_DIR + "xt_solution" + std::to_string(rank) + ".csv");
+        std::string sol_file_name(DATA_DIR + "xt_solution"+ std::to_string(i) + ".csv");
+        sol_file.open(sol_file_name);
+        xt::dump_csv(sol_file, xt::expand_dims(z,1));
+
+        if (rank==0){
+            computeError(z,true_sol);
+        }
     }
     
-    while (iter < MAX_ITER) {
-        // u update	
-        u += x - z;
-        //std::cout << "||u||_2 " << xt::linalg::norm(u,2) << std::endl;
-
-        //x update
-        auto q = Atb + rho*(z-u);
-        //std::cout << "||q||_2 " << xt::linalg::norm(q,2) << std::endl;
-	
-	if (skinny){
-	    x = xt::linalg::dot(LUinv,q);
-	}
-	else{
-            //use matrix inversion lemma
-            auto Aq = xt::linalg::dot(A,q);
-            auto p = xt::linalg::dot(LUinv,Aq);
-            auto xtemp = xt::linalg::dot(xt::transpose(A) ,p);
-            //std::cout << "||A^Tp||_2 " << xt::linalg::norm(xtemp,2) << std::endl;
-
-            x = (1./rho)*q - (1./(rho*rho))*xtemp;
-            //std::cout <<"||x||_2 " << xt::linalg::norm(x,2) << std::endl;
-        }
-        xt::xtensor<double, 1> w = x+u;
-        //Message passing should go here
-
-        send[0] = xt::linalg::vdot(r, r);
-        send[1] = xt::linalg::vdot(x, x);
-        send[2] = xt::linalg::vdot(u, u) / pow(rho, 2);
-
-        auto zprev = z;
-        //copy xtensor to double array
-        xtensor2array(w, mpi_w_ptr);
-        xtensor2array(z, mpi_z_ptr);
-
-        MPI_Allreduce(mpi_w_ptr, mpi_z_ptr,  n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(send,    recv,     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-        array2xtensor(w, mpi_w_ptr);
-        array2xtensor(z, mpi_z_ptr);
-        prires = sqrt(recv[0]);
-        nxstack = sqrt(recv[1]);
-        nystack = sqrt(recv[2]);
-
-        z = z / N;
-        soft_threshold(z, lambda/(N*rho));
-        auto zdiff = z - zprev;
-        //std::cout << "||z||_2 " << xt::linalg::norm(z,2) << std::endl; 
-        dualres = sqrt(N) * rho * xt::linalg::norm(zdiff, 2);
-
-        eps_pri = sqrt(n * N)*ABSTOL + RELTOL*fmax(nxstack, xt::linalg::norm(z, 2)*sqrt(N));
-        eps_dual = sqrt(n * N)*ABSTOL + RELTOL*nystack;
-
-        double Azb_nrm = xt::linalg::norm(xt::linalg::dot(A,z)-b, 2);
-        double obj = 0.5*Azb_nrm*Azb_nrm + lambda*xt::linalg::norm(z,1);
-
-        if (rank == 0){
-            std::printf("%3d %10.4f %10.4f %10.4f %10.4f %10.4f\n", iter, prires, eps_pri, dualres, eps_dual, obj);
-        }
-
-        if((prires <= eps_pri) && (dualres <= eps_dual)){
-            break;
-        }
-
-        r = x-z;
-        //std::cout << "||r||_2 " << xt::linalg::norm(r,2) << std::endl;
-        iter++;
-    }
-    std::ofstream sol_file;
-    //std::string sol_file_name(DATA_DIR + "xt_solution" + std::to_string(rank) + ".csv");
-    std::string sol_file_name(DATA_DIR + "xt_solution" + ".csv");
-    sol_file.open(sol_file_name);
-    xt::dump_csv(sol_file, xt::expand_dims(z,1));
-
     MPI_Finalize();
-
     delete[] mpi_w_ptr;
     delete[] mpi_z_ptr;
-    if (rank==0){
-        computeError(z,true_sol);
-    }
-
     return 0;
 }
 
@@ -241,7 +256,7 @@ void array2xtensor(xt::xtensor<double, 1> &x, double* ptr){
     }
 }
 
-void ComputeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
+void computeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
     auto err=true_sol-z;
     //double eps=0.01;
     //int n=z.size();
