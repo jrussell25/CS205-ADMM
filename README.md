@@ -95,3 +95,34 @@ The dual decomposition update rule with augmented penalty is
 
 Note that the dual update step size is now the penalty parameter. The reason of making this choice is to make sure that each iteration the pair of the primal and dual variable is dual feasible. The primal minimization problem is changed to the Lagrangian with the penalty term. This is referred to as *the method of multiplers*. The method converges under far more general conditions than dual ascent.
 
+
+# Dirtributed Lasso
+
+In this project, we consider L1 regularized linear regression, which is a standard machine learning problem:
+
+<p align="center">
+ <img src="figures/lasso.png" height="35">
+</p>
+
+The associated ADMM update is as follows:
+
+<p align="center">
+ <img src="figures/lasso_admm_update.png" height="50">
+</p>
+
+For efficiency consideration, the matrix inversion is calculated at the beginning, and cached for later multiplication.
+
+The following diagrams illustrate how to distributedly implement the above equations by partitioning the data across several nodes.
+
+<p align="center">
+ <img src="figures/data_partition.png" height="150">
+</p>
+
+<p align="center">
+ <img src="computation_graph.png" height="500">
+</p>
+
+
+
+
+
