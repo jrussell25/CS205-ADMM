@@ -15,11 +15,31 @@ In addition to these libraries, we use CMake to compile our code and Intel's C++
 Math Kernel Library, and MPI Implementation. This software is all available on the Harvard Cluster.
 The following command will load them all using the LMod package manager: `source gogo_modules.sh`.
 
+Or we can install the newest from source(https://cmake.org/download/) by typing:
+
+```wget https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2.tar.gz```
+
+and unzip by typing:
+```tar -zxvf cmake-3.17.2```
+
+then enter the cmake folder and install by typing:
+```./bootstrap```
+```make```
+```make install```
+
 Before compiling our code you need to tell cmake where the xtensor headers live. 
 On the Harvard cluster, where user created conda environments live in 
 `~/.conda`, one should run 
 
 ```cmake -DCMAKE_INSTALL_PREFIX=~/.conda/envs/your_xtensor_env_name```.
+
+and then run
+```make```
+to get the executable. Then you can run:
+
+```mpirun -np 1 xtensor_lasso```
+
+to execute. You can change 1 to other numbers for MPI application.
 
 Example for running the generate_lasso_data.py:
 
