@@ -39,6 +39,8 @@ For OpenBlas, we can download by:
 ```wget https://codeload.github.com/xianyi/OpenBLAS/tar.gz/v0.3.9```
 enter the unzipped folder and type 
 ```make```
+and
+```sudo make PREFIX=/usr/local install```
 
 Before compiling our code you need to tell cmake where the xtensor headers live. 
 On the Harvard cluster, where user created conda environments live in 
@@ -48,8 +50,6 @@ On the Harvard cluster, where user created conda environments live in
 
 and then run
 ```make```
-and
-```sudo make PREFIX=/usr/local install```
 
 to get the executable. Then you can run:
 
