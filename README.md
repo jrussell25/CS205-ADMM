@@ -29,7 +29,7 @@ then enter the cmake folder and install by typing:
 
 For the Lapack, we can download at http://www.netlib.org/lapack/#_lapack_version_3_9_0_2, enter the lapack folder, make a new folder called 'build' by:
 
-```makedir build/'''
+```makedir build/```
 
 enter the build/ folder and type:
 ```cmake```
