@@ -37,7 +37,8 @@ enter the build/ folder and type:
 
 For OpenBlas, we can download by:
 ```wget https://codeload.github.com/xianyi/OpenBLAS/tar.gz/v0.3.9```
-and install in a similar way.
+enter the unzipped folder and type 
+```make```
 
 Before compiling our code you need to tell cmake where the xtensor headers live. 
 On the Harvard cluster, where user created conda environments live in 
