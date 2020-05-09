@@ -33,7 +33,7 @@ For the Lapack, we can download at http://www.netlib.org/lapack/#_lapack_version
 
 enter the build/ folder and type:
 ```cmake```
-```make install```
+```sudo make install /usr/bin```
 
 For OpenBlas, we can download by:
 ```wget https://codeload.github.com/xianyi/OpenBLAS/tar.gz/v0.3.9```
@@ -48,6 +48,9 @@ On the Harvard cluster, where user created conda environments live in
 
 and then run
 ```make```
+and
+```sudo make PREFIX=/usr/local install```
+
 to get the executable. Then you can run:
 
 ```mpirun -np 1 xtensor_lasso```
