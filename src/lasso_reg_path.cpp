@@ -16,8 +16,6 @@
 #include "xtensor/xnorm.hpp"
 #include "xtensor-blas/xlinalg.hpp"
 
-
-
 std::string DATA_DIR("./data/");
 
 int main(int argc, char *argv[])
@@ -36,22 +34,44 @@ int main(int argc, char *argv[])
     ierr = MPI_Comm_size(MPI_COMM_WORLD, &size);
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     double N = (double) size;  // Number of subsystems/slaves for ADMM
+    
+    int M = 32/N;
+    int ROWS=5000;
+    int COLS=8000;
+
+    //Timing parameters
+    double tick, io_time, precompute_time, sol_time;
+
+    tick = MPI_Wtime();
+
+    std::ifstream true_sol_file;
+    std::string true_solution_name(DATA_DIR+"xtrue.csv");
+    true_sol_file.open(true_solution_name);
+    auto true_sol_in=xt::load_csv<double>(true_sol_file);
+    xt::xtensor<double, 1> true_sol = xt::squeeze(true_sol_in);
+
+    
+    xt::xtensor<double, 2> A = xt::empty<double>({M*ROWS,COLS});
+    xt::xtensor<double, 1> b = xt::empty<double>({M*ROWS});
 
     std::ifstream Afile, bfile;
-    std::ifstream true_sol_file;
-    std::string Afile_name(DATA_DIR + "A" + std::to_string(rank) + ".csv");
-    std::string bfile_name(DATA_DIR + "b" + std::to_string(rank) + ".csv");
-    std::string true_solution_name(DATA_DIR+"xtrue.csv");
-    Afile.open(Afile_name);
-    bfile.open(bfile_name);
-    true_sol_file.open(true_solution_name);
-    auto Ain = xt::load_csv<double>(Afile);
-    auto bin = xt::load_csv<double>(bfile);
-    auto true_sol_in=xt::load_csv<double>(true_sol_file);
+    for (int i=0; i< M; i++){
+        int idx = M*rank+i;
+        std::string Afile_name(DATA_DIR + "A" + std::to_string(idx) + ".csv");
+        std::string bfile_name(DATA_DIR + "b" + std::to_string(idx) + ".csv");
+        Afile.open(Afile_name);
+        bfile.open(bfile_name);
+        auto Ain = xt::load_csv<double>(Afile);
+        auto bin = xt::load_csv<double>(bfile);
+        auto Aview = xt::view(A, xt::range(i*ROWS, (i+1)*ROWS), xt::all());
+        Aview = Ain;
+        auto bview = xt::view(b, xt::range(i*ROWS, (i+1)*ROWS));
+        bview = xt::squeeze(bin);
+        Afile.close();
+        bfile.close();
+    }
 
-    xt::xtensor<double, 2> A = Ain;
-    xt::xtensor<double, 1> b = xt::squeeze(bin);
-    xt::xtensor<double, 1> true_sol = xt::squeeze(true_sol_in);
+    io_time = MPI_Wtime() - tick;
 
     auto sA = xt::adapt(A.shape());
     if (rank==0){
@@ -68,7 +88,7 @@ int main(int argc, char *argv[])
     void soft_threshold(xt::xtensor<double, 1> &v, const double a);
     void xtensor2array(const xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
     void array2xtensor(xt::xtensor<double, 1> &x, double* ptr); //copy x to ptr for MPI pessage passing
-    void computeError(xt::xtensor<double, 1> &z, xt::xtensor<double,1> &true_sol);
+    double computeError(xt::xtensor<double, 1> &z, xt::xtensor<double,1> &true_sol);
 
     int m = sA(0);
     int n = sA(1);
@@ -86,10 +106,9 @@ int main(int argc, char *argv[])
     double recv[3]; // used to receive the results of these aggregations
 
     double lambda;
-    double lambda_max;// use global lambda max heuristic = 0.5;	
-
+    double lambda_max;// use global lambda max heuristic 
     int n_tests = 10;
-    auto reg_factor = xt::linspace(0.01, 0.95, n_tests);
+    xt::xtensor<double, 1> reg_factor = xt::logspace<double>(-4, 0, n_tests+1);
     double rho = 1.0;
     double prires = 0;
     double dualres = 0;
@@ -98,10 +117,9 @@ int main(int argc, char *argv[])
     double nxstack = 0;
     double nystack = 0;
 
-    double best_obj = 100000.;
-
-    //We may not actually need many of these in memory given 
-    //lazy evaluation. i.e. many could just be autos
+    double best_err = 100000.;
+    double best_lambda = -1;
+    
     xt::xtensor<double, 1> x = xt::zeros<double>({n});
     xt::xtensor<double, 1> u = xt::zeros<double>({n});
     xt::xtensor<double, 1> z = xt::zeros<double>({n});
@@ -111,6 +129,7 @@ int main(int argc, char *argv[])
     double* mpi_w_ptr = new double[n];   //double array for holding vector sending with MPI
     double* mpi_z_ptr = new double[n];
 
+    tick = MPI_Wtime();
 
     xt::xtensor<double,1> Atb = xt::linalg::dot(xt::transpose(A), b);
 
@@ -121,6 +140,7 @@ int main(int argc, char *argv[])
     // xtensors inv uses cholesky factorization under the hood
     // In boyd/matlab notation LUinv = U \ L \
     // precompute this instead of cholesky factor
+    
     xt::xtensor<double, 2> LUinv; 
     if (skinny){
         //L = chol(AtA+rho*I)
@@ -134,6 +154,10 @@ int main(int argc, char *argv[])
         auto AAt = xt::linalg::dot(A,xt::transpose(A));
         LUinv = xt::linalg::inv(eye_m + (1./rho)*AAt);
     }
+
+    precompute_time = MPI_Wtime() - tick;
+
+    tick = MPI_Wtime();
     for(int i=0; i < n_tests; i++){
         //iterate through regularization parameters
         //use a warm start for x update i.e. use result from previous run
@@ -144,6 +168,7 @@ int main(int argc, char *argv[])
 
         int iter = 0;
         if (rank == 0) {
+	    std::cout << "regularization factor = " << reg_factor(i) << std::endl;
             std::cout << "Using lambda = " << lambda << std::endl;
             std::printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual", "objective");
         }
@@ -210,6 +235,7 @@ int main(int argc, char *argv[])
             if((prires <= eps_pri) && (dualres <= eps_dual)){
                 //check if we have improved objective
                 //need to compute global objective
+		
                 break;
             }
 
@@ -217,17 +243,33 @@ int main(int argc, char *argv[])
             //std::cout << "||r||_2 " << xt::linalg::norm(r,2) << std::endl;
             iter++;
         }
-        std::ofstream sol_file;
-        //std::string sol_file_name(DATA_DIR + "xt_solution" + std::to_string(rank) + ".csv");
-        std::string sol_file_name(DATA_DIR + "xt_solution"+ std::to_string(i) + ".csv");
-        sol_file.open(sol_file_name);
-        xt::dump_csv(sol_file, xt::expand_dims(z,1));
-
         if (rank==0){
-            computeError(z,true_sol);
+            double abs_err = computeError(z,true_sol);
+            if (abs_err < best_err){
+                best_err= abs_err;
+                best_x = z;
+                best_lambda = lambda;
+                }
+            std::cout << "-------------------------------------------------------" << std::endl;
         }
     }
-    
+
+    sol_time = MPI_Wtime() - tick;
+	
+    if(rank==0){
+        std::cout << "I/O Time: " << io_time <<std::endl;
+        std::cout << "Precompute time: " << precompute_time << std::endl;
+        std::cout << "Solution time: " << sol_time << std::endl;
+        
+        std::cout << "Optimal regularization parameter " << best_lambda << std::endl;
+	std::cout << "Absolute error with optimal value: " << best_err << std::endl;
+
+        std::ofstream sol_file;
+        std::string sol_file_name(DATA_DIR + "xt_solution.csv");
+        sol_file.open(sol_file_name);
+        xt::dump_csv(sol_file, xt::expand_dims(best_x, 1));
+    }
+
     MPI_Finalize();
     delete[] mpi_w_ptr;
     delete[] mpi_z_ptr;
@@ -256,32 +298,14 @@ void array2xtensor(xt::xtensor<double, 1> &x, double* ptr){
     }
 }
 
-void computeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
+double computeError(xt::xtensor<double,1> &z, xt::xtensor<double, 1> &true_sol){
     auto err=true_sol-z;
-    //double eps=0.01;
-    //int n=z.size();
-    //xt::xarray<double> z_abs=xt::abs(z);
     double err_abs = xt::linalg::norm(err,1);
-    //xt::xarray<double> ts_abs =xt::abs(true_sol);
-    //xt::xarray<double> err_abs_sum = xt::sum(err_abs);
-    //xt::xarray<double> ts_abs_sum  = xt::sum(ts_abs);
     double nnz_result = xt::linalg::norm(z,0);
     double nnz_true = xt::linalg::norm(true_sol, 0);
-    /*
-    for(int i=0; i<n;i+=1){
-        if(z[i]<eps && ts_abs[i]<eps){
-            num_zero_result+=1;
-        }
-        if(ts_abs[i]<eps){
-            num_zero_true+=1;
-        }
-    }
-    */
     std::cout<<"Absolute Error ||x - x_true||_1 = " << err_abs <<std::endl;
-    //std::cout<<"|x| norm 1 sum of true solution:"<<ts_abs_sum<<std::endl;
     std::cout<<"Number of nonzero entries in calculated solution: "<< nnz_result <<std::endl;
     std::cout<<"Number of nonzero entries in true solution: "<< nnz_true <<std::endl;
-
-    return;
+    return err_abs;
 }
 
