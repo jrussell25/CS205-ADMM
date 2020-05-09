@@ -15,11 +15,47 @@ In addition to these libraries, we use CMake to compile our code and Intel's C++
 Math Kernel Library, and MPI Implementation. This software is all available on the Harvard Cluster.
 The following command will load them all using the LMod package manager: `source gogo_modules.sh`.
 
+If we are not running on Harvard cluster, we need to install lapack, Openblas and cmake 3 manually. we can install the newest from source(https://cmake.org/download/) by typing:
+
+```wget https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2.tar.gz```
+
+and unzip by typing:
+```tar -zxvf cmake-3.17.2```
+
+then enter the cmake folder and install by typing:
+```./bootstrap```
+```make```
+```make install```
+
+For the Lapack, we can download at http://www.netlib.org/lapack/#_lapack_version_3_9_0_2, enter the lapack folder, make a new folder called 'build' by:
+
+```makedir build/```
+
+enter the build/ folder and type:
+```cmake```
+```sudo make install /usr/bin```
+
+For OpenBlas, we can download by:
+```wget https://codeload.github.com/xianyi/OpenBLAS/tar.gz/v0.3.9```
+enter the unzipped folder and type 
+```make```
+and
+```sudo make PREFIX=/usr/local install```
+
 Before compiling our code you need to tell cmake where the xtensor headers live. 
 On the Harvard cluster, where user created conda environments live in 
 `~/.conda`, one should run 
 
 ```cmake -DCMAKE_INSTALL_PREFIX=~/.conda/envs/your_xtensor_env_name```.
+
+and then run
+```make```
+
+to get the executable. Then you can run:
+
+```mpirun -np 1 xtensor_lasso```
+
+to execute. You can change 1 to other numbers for MPI application.
 
 Example for running the generate_lasso_data.py:
 
@@ -34,19 +70,19 @@ In order to discuss distributed implementation of ADMM, we start with introducin
 
 Consider the equality-constrained convex optimization problem 
 <p align="center">
- <img src="figures/opt_problem.png" height="50">
+ <img src="figures/opt_problem.png" height="35">
 </p>
 
 The corresponding Lagrangian dual function is defined as 
 
 <p align="center">
- <img src="figures/dual_func.png" height="35">
+ <img src="figures/dual_func.png" height="25">
 </p>
 
 Assuming strong duality holds, the primal optimizer can be recovered by first finding the dual optimizer as follows
 
 <p align="center">
- <img src="figures/primal_recovery.png" height="35">
+ <img src="figures/primal_recovery.png" height="30">
 </p>
 
 The *dual ascent method* is inspired by this idea, following the two steps: (1) Update the dual variable by ascending in the dual gradient direction, which equals to the residual of the equlity constraint, (2) Update the primal variable by minimizing the Lagrangian, fixing the dual variable:
@@ -82,7 +118,7 @@ This form is desirable for distributed optimization.
 The problem of dual decomposition is that it requires strict convexity and finiteness of the objective function for convergence, which is a quite strong assumption in reality that can be difficult to satisfy. The augmented Lagrangian method was developed to make dual ascent method more robust to yield convergence without satisfying those strict requirements. This is done by adding an additional quadratic penalty term to the original objective function
 
 <p align="center">
- <img src="figures/augmented_opt_problem.png" height="50">
+ <img src="figures/augmented_opt_problem.png" height="35">
 </p>
 
 As the added penalty term vanishes for all the feasible primal variables, this does not change the result of the optimization.
@@ -94,4 +130,49 @@ The dual decomposition update rule with augmented penalty is
 </p>
 
 Note that the dual update step size is now the penalty parameter. The reason of making this choice is to make sure that each iteration the pair of the primal and dual variable is dual feasible. The primal minimization problem is changed to the Lagrangian with the penalty term. This is referred to as *the method of multiplers*. The method converges under far more general conditions than dual ascent.
+
+Reproductivity parameter:
+Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 Intel(R) Xeon(R) Gold 6134 16 cores CPU @ 3.20GHz
+
+# Dirtributed Lasso
+
+In this project, we consider L1 regularized linear regression, which is a standard machine learning problem:
+
+<p align="center">
+ <img src="figures/lasso.png" height="20">
+</p>
+
+The associated ADMM update is as follows:
+
+<p align="center">
+ <img src="figures/lasso_admm_update.png" height="50">
+</p>
+
+For efficiency consideration, the matrix inversion is calculated at the beginning, and cached for later multiplication.
+
+The following diagrams illustrate how to distributedly implement the above equations by partitioning the data across several nodes.
+
+<p align="center">
+ <img src="figures/data_partition.png" height="100">
+</p>
+
+<p align="center">
+ <img src="figures/computation_graph.png" height="300">
+</p>
+
+This distributed implementation can be summarized into 4 key steps:
+
+- **Initilization**:Each node reads in the local matrix data into its local memory, and initlize local deicison variables *x* and *u*.
+
+- **Local optimization**: Each node solves its local optimization problem (in Lasso, this local optimization is a ridge regression).
+
+- **Global aggregation**: All the nodes communicate their local variables for averaging and broadcast the results back to all the nodes. We use MPI AllReduce to accomplish this aggregation.
+
+- **Synchronization**: Synchronization between nodes must be enforced for the correctness of the implementation: All the local variables must be updated before global aggregation, and the local updates must all use the latest global variable.
+
+
+
+
+
+
 
