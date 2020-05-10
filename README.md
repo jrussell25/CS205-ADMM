@@ -216,7 +216,15 @@ We used [xtensor](https://github.com/xtensor-stack/xtensor), an opensource c++ l
 
 
 
+# Performance Testing
 
+Detailed analysis of the performance of our implementation is in [`performance.md`](performance.md).
+The figure below shows the breadown of runtime for different numbers of MPI processes and OpenMP threads per process.
+
+
+<p align="center">
+ <img src="figures/time_by_part.png" height="100">
+</p>
 
 
 
