@@ -124,7 +124,7 @@ The following diagrams illustrate how to distributedly implement the above equat
 
 This distributed implementation can be summarized into 4 key steps:
 
-- **Initilization**:Each node reads in the local matrix data into its local memory, and initlize local deicison variables *x* and *u*.
+- **Initilization**: Each node reads in the local matrix data into its local memory, and initlize local deicison variables *x* and *u*.
 
 - **Local optimization**: Each node solves its local optimization problem (in Lasso, this local optimization is a ridge regression).
 
