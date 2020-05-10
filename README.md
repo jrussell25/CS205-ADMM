@@ -83,6 +83,9 @@ The following chart shows the running time of L1 problem on the harvard cluster 
 
 If we want to compress an image of 320000 pixels(figure size around 3MB) into 32000 pixels (size around 0.3MB), it would take 1824 seconds to finish. We need high performance computing and parallelization to optimize the running time. 
 
+Reproductivity parameter:
+Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 Intel(R) Xeon(R) Gold 6134 16 cores CPU @ 3.20GHz
+
 # Description of solution and comparison with existing work on the problem
 
 Here we use diferent degree of parallelization to accelerate the existing ADMM method. We firstly implemented sequential ADMM in C++, added MPI function, then used xtensor for numpy style math in C++. Then we used blas (basic linear algebra subprograms) and lapack(linear algebra package) for low level of parallelization.
@@ -157,9 +160,6 @@ The dual decomposition update rule with augmented penalty is
 </p>
 
 Note that the dual update step size is now the penalty parameter. The reason of making this choice is to make sure that each iteration the pair of the primal and dual variable is dual feasible. The primal minimization problem is changed to the Lagrangian with the penalty term. This is referred to as *the method of multiplers*. The method converges under far more general conditions than dual ascent.
-
-Reproductivity parameter:
-Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 Intel(R) Xeon(R) Gold 6134 16 cores CPU @ 3.20GHz
 
 # Dirtributed Lasso
 
