@@ -198,6 +198,37 @@ This distributed implementation can be summarized into 4 key steps:
 - **Synchronization**: Synchronization between nodes must be enforced for the correctness of the implementation: All the local variables must be updated before global aggregation, and the local updates must all use the latest global variable.
 
 
+# Our parallel implementation
+
+We used a hybrid multi-node multi-core computing with lazy computing for this distributed ADMM application. 
+
+### OpenMPI
+
+We used [OpenMPI](https://www.open-mpi.org/faq/?category=mpi-apps) for c++ to launch parallel nodes, each of which corresponds to a piece of training data partition. We use 
+
+### Xtensor
+
+We used [xtensor](https://github.com/xtensor-stack/xtensor), an opensource c++ library for numerical analysis with multi-dimensional array expressions, with an extensible expression system enabling lazy broadcasting, and numpy-like syntax for array manipulation. With this lazy computing feature, both efficiency and memory usage are improved, allowing feasibility of larger scale applications.
+
+### Xtensor-blas
+
+[Xtensor-blas](https://github.com/xtensor-stack/xtensor-blas) is a BLAS extension to the xtensor library, which enables the capability to use the BLAS and LAPACK libraries for optimized high performance computing with multi-core capability.
+
+
+
+
+
+
+
+
+# References:
+
+[Boyd, Stephen, et al. "Distributed optimization and statistical learning via the alternating direction method of multipliers." Foundations and Trends® in Machine learning 3.1 (2011): 1-122.](https://stanford.edu/~boyd/papers/admm_distr_stats.html)
+
+[xtensor documentation](https://xtensor.readthedocs.io/en/latest/)
+
+[xtensor-blas documentation](https://xtensor-blas.readthedocs.io/en/latest/)
+
 
 
 
