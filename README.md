@@ -160,9 +160,9 @@ This distributed implementation can be summarized into 4 key steps:
 
 We used a hybrid multi-node multi-core computing with lazy computing for this distributed ADMM application. 
 
-### OpenMPI
+### Intel MPI
 
-We used [OpenMPI](https://www.open-mpi.org/faq/?category=mpi-apps) for c++ to launch parallel nodes, each of which corresponds to a piece of training data partition. We use 
+We used the [Intel MPI library](https://software.intel.com/content/www/us/en/develop/tools/mpi-library.html) for c++ to launch parallel nodes, each of which corresponds to a piece of training data partition.
 
 ### Xtensor
 
@@ -181,7 +181,6 @@ We generate synthetic dataset for both training and testing (see [generate_lasso
 
 Detailed analysis of the performance of our implementation is in [`performance.md`](performance.md).
 The figure below shows the breadown of runtime for different numbers of MPI processes and OpenMP threads per process.
-
 
 <p align="center">
  <img src="figures/time_by_part.png" height="500">
