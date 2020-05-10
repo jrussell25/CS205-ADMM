@@ -17,9 +17,24 @@ The following command will load them all using the LMod package manager: `source
 
 If we are not running on Harvard cluster, see [`installation.md`](installation.md) for details on how to install cmake, openblas and lapack.
 
-Example for running the generate_lasso_data.py:
+Example for running the generate_lasso_data.py to generate matrix A of (160, 500) elements with 30 non-zero elements for 8 MPI processes:
 
-```python3 generate_lasso_data.py 160 500 30 1```
+```python3 generate_lasso_data.py 160 500 30 8```
+
+Before compiling our code you need to tell cmake where the xtensor headers live. 
+On the Harvard cluster, where user created conda environments live in 
+`~/.conda`, one should run 
+
+```cmake -DCMAKE_INSTALL_PREFIX=~/.conda/envs/your_xtensor_env_name```.
+
+and then run
+```make```
+
+to get the executable. Then you can run:
+
+```mpirun -np 1 xtensor_lasso```
+
+to execute. You can change 1 to other numbers for MPI application. Make sure you have run the generate_lasso_data.py before running the executable.
 
 # Description of problem and the need for HPC
 ADMM is the abbreviation of alternating direction method of multipliers. It comes from the classical convex optimization problem, where we want to minimize f(x) subject to an equality constraint:

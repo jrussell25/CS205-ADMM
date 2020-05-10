@@ -26,18 +26,3 @@ enter the unzipped folder and type
 ```make```
 and
 ```sudo make PREFIX=/usr/local install```
-
-Before compiling our code you need to tell cmake where the xtensor headers live. 
-On the Harvard cluster, where user created conda environments live in 
-`~/.conda`, one should run 
-
-```cmake -DCMAKE_INSTALL_PREFIX=~/.conda/envs/your_xtensor_env_name```.
-
-and then run
-```make```
-
-to get the executable. Then you can run:
-
-```mpirun -np 1 xtensor_lasso```
-
-to execute. You can change 1 to other numbers for MPI application.
