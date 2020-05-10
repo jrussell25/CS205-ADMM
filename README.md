@@ -61,6 +61,26 @@ Example for running the generate_lasso_data.py:
 
 ```python3 generate_lasso_data.py 160 500 30 1```
 
+# Description of problem and the need for HPC
+ADMM is the abbreviation of alternating direction method of multipliers. It comes from the classical convex optimization problem, where we want to minimize f(x) subject to an equality constraint:
+```sh
+Minimize f(x) subject to Ax=b
+```
+A typical application for ADMM is the compressed sensing, where we want to compress an image to about 10% of its original size, and be able to reconstruct the original image with the compressed one. This problem can be written in L1 problem, where we want to
+
+```sh
+Minimize L1 norm ||x|| such that Ax=b.
+```
+Where the number of rows in A represents the number of pixels in the compressed image. (reference at http://www.pyrunner.com/weblog/2016/05/26/compressed-sensing-python/)
+The following chart shows the running time of L1 problem on the harvard cluster of CentOS 7 system with 48 core Intel(R) Xeon(R) Platinum 8268 CPU @2.90GHz with sequential ADMM method:
+| size of matrix A | running time (s) |
+| ------ | ------ |
+| (2000 , 2500) | 1 |
+| (4000 , 5000) | 5 |
+| (8000 , 10000) | 44 |
+| (16000 , 20000) | 247 |
+| (32000 , 40000) | 1824 |
+If we want to compress an image of 320000 pixels(figure size around 3MB) into 32000 pixels (size around 0.3MB), it would take 1824 seconds to finish. We need high performance computing and parallelism to optimize the running time. 
 
 # Dirtributed ADMM
 
