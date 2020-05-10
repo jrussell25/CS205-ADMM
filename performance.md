@@ -63,11 +63,11 @@ and should also improve with more threads.
 
 
 <p align="center">
- <img src="figures/total_time.png" height="100">
+ <img src="figures/total_time.png" height="500">
 </p>
 
 <p align="center">
- <img src="figures/time_by_part.png" height="100">
+ <img src="figures/time_by_part.png" height="500">
 </p>
 
 The figures above show the total execution time for the problem described above
@@ -117,6 +117,6 @@ specific problem here, ADMM is flexible enough to solve a large class of problem
 other problems at large scale.
 
 **Data Availability**  All the timing data for the plots here were calculated using `MPI_Wtime`. The raw output from the test which includes output from 
-the optimizer and timing (at the very end) are in
-[`perf_results`](/perf_results). That data was processed in python and plotted
-using matplotlib which can be seen in this [notebook](performance_analysis).
+the optimizer and timing (at the very end) are in [`perf_results`](/perf_results).
+The files are named according to `output_nprocesses_nthreads.txt`.That data was processed in
+python and plotted using matplotlib which can be seen in this [notebook](performance_analysis.ipynb).
