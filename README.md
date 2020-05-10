@@ -212,8 +212,14 @@ We used [xtensor](https://github.com/xtensor-stack/xtensor), an opensource c++ l
 
 ### Xtensor-blas
 
-[Xtensor-blas](https://github.com/xtensor-stack/xtensor-blas) is a BLAS extension to the xtensor library, which enables the capability to use the BLAS and LAPACK libraries for optimized high performance computing with multi-core capability.
+[xtensor-blas](https://github.com/xtensor-stack/xtensor-blas) is a BLAS extension to the xtensor library, which enables the capability to use the BLAS and LAPACK libraries for optimized high performance computing with multi-core capability.
 
+
+# Dataset
+
+We generate synthetic dataset for both training and testing (see [generate_lasso_data.py](https://github.com/jrussell25/CS205-ADMM/blob/master/generate_lasso_data.py)). Both feature vector and the coefficient matrix are generated as Gaussian random variables. The right-hand-side vector b is computed as the matrix multiplication of the feature and coefficient matrix then corrupted by Gaussian noise. This allows us to easily compare our solution with the ground truth to verify the correctness of our implementation and to tune hyper-parameters for quicker convergence and termination criterion.
+
+# Performance evaluation
 
 
 
@@ -223,11 +229,11 @@ We used [xtensor](https://github.com/xtensor-stack/xtensor), an opensource c++ l
 
 # References:
 
-[Boyd, Stephen, et al. "Distributed optimization and statistical learning via the alternating direction method of multipliers." Foundations and Trends® in Machine learning 3.1 (2011): 1-122.](https://stanford.edu/~boyd/papers/admm_distr_stats.html)
+1. [Boyd, Stephen, et al. "Distributed optimization and statistical learning via the alternating direction method of multipliers." Foundations and Trends® in Machine learning 3.1 (2011): 1-122.](https://stanford.edu/~boyd/papers/admm_distr_stats.html)
 
-[xtensor documentation](https://xtensor.readthedocs.io/en/latest/)
+2. [xtensor documentation](https://xtensor.readthedocs.io/en/latest/)
 
-[xtensor-blas documentation](https://xtensor-blas.readthedocs.io/en/latest/)
+3. [xtensor-blas documentation](https://xtensor-blas.readthedocs.io/en/latest/)
 
 
 
