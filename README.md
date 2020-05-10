@@ -43,8 +43,6 @@ The following chart shows the running time of L1 problem on the harvard cluster 
 
 If we want to compress an image of 320000 pixels(figure size around 3MB) into 32000 pixels (size around 0.3MB), it would take 1824 seconds to finish. We need high performance computing and parallelization to optimize the running time. 
 
-Reproductivity parameter:
-Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 Intel(R) Xeon(R) Gold 6134 16 cores CPU @ 3.20GHz
 
 # Description of solution and comparison with existing work on the problem
 
@@ -192,6 +190,8 @@ The figure below shows the breadown of runtime for different numbers of MPI proc
  <img src="figures/time_by_part.png" height="500">
 </p>
 
+Reproductivity parameter:
+Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 Intel(R) Xeon(R) Gold 6134 16 cores CPU @ 3.20GHz
 
 
 
