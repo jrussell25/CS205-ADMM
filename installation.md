@@ -1,4 +1,4 @@
-#installation guide for cmake lapack and openblas
+##installation guide for cmake lapack and openblas
 
 If we are not running on Harvard cluster, we need to install lapack, Openblas and cmake 3 manually. we can install the newest from source(https://cmake.org/download/) by typing:
 
