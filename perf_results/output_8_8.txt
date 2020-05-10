@@ -1,0 +1,2 @@
+Using 8 MPI processes
+Size of per processor A matrix: {80000,  8000}
