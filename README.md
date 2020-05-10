@@ -15,11 +15,47 @@ In addition to these libraries, we use CMake to compile our code and Intel's C++
 Math Kernel Library, and MPI Implementation. This software is all available on the Harvard Cluster.
 The following command will load them all using the LMod package manager: `source gogo_modules.sh`.
 
+If we are not running on Harvard cluster, we need to install lapack, Openblas and cmake 3 manually. we can install the newest from source(https://cmake.org/download/) by typing:
+
+```wget https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2.tar.gz```
+
+and unzip by typing:
+```tar -zxvf cmake-3.17.2```
+
+then enter the cmake folder and install by typing:
+```./bootstrap```
+```make```
+```make install```
+
+For the Lapack, we can download at http://www.netlib.org/lapack/#_lapack_version_3_9_0_2, enter the lapack folder, make a new folder called 'build' by:
+
+```mkdir build/```
+
+enter the build/ folder and type:
+```cmake```
+```sudo make install /usr/bin```
+
+For OpenBlas, we can download by:
+```wget https://codeload.github.com/xianyi/OpenBLAS/tar.gz/v0.3.9```
+enter the unzipped folder and type 
+```make```
+and
+```sudo make PREFIX=/usr/local install```
+
 Before compiling our code you need to tell cmake where the xtensor headers live. 
 On the Harvard cluster, where user created conda environments live in 
 `~/.conda`, one should run 
 
 ```cmake -DCMAKE_INSTALL_PREFIX=~/.conda/envs/your_xtensor_env_name```.
+
+and then run
+```make```
+
+to get the executable. Then you can run:
+
+```mpirun -np 1 xtensor_lasso```
+
+to execute. You can change 1 to other numbers for MPI application.
 
 Example for running the generate_lasso_data.py:
 
@@ -95,6 +131,8 @@ The dual decomposition update rule with augmented penalty is
 
 Note that the dual update step size is now the penalty parameter. The reason of making this choice is to make sure that each iteration the pair of the primal and dual variable is dual feasible. The primal minimization problem is changed to the Lagrangian with the penalty term. This is referred to as *the method of multiplers*. The method converges under far more general conditions than dual ascent.
 
+Reproductivity parameter:
+Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 Intel(R) Xeon(R) Gold 6134 16 cores CPU @ 3.20GHz
 
 # Dirtributed Lasso
 
