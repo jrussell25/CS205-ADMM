@@ -199,7 +199,7 @@ Cases were run on Harvard cluster of CentOS Linux release 7.6.1810 with x86_64 I
 
 3. [xtensor-blas documentation](https://xtensor-blas.readthedocs.io/en/latest/)
 
-
+4. [Distributed Optimization via ADMM](https://www.caam.rice.edu/~optimization/L1/optseminar/DistrADMM_Peng.pdf)
 
 
 
