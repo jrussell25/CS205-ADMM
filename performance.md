@@ -3,25 +3,25 @@
 ### Reproducibility
 
 - The tests below were run on the `shared` partition of the Harvard cluster
- - CentOS Linux release 7.6.1810 with x86_64 
- - Each node contains an Intel Xeon Cascade Lake processors with 48 Cores, 196 Gb RAM, and 48 Mb of cache
- - Nodes are connected with Infiniband Fabric
- - Data was read from and written to global scratch storage which is a Lustre Parallel file system
- - We requested resources through the SLURM scheduler and for all different combinations of MPI processors and OpenMP threads requested 4Gb of memory for each CPU. In practice we requested 16 cpus per task and set the number of threads with the environment variable `OMP_NUM_THREADS`.
+  - CentOS Linux release 7.6.1810 with x86_64 
+  - Each node contains an Intel Xeon Cascade Lake processors with 48 Cores, 196 Gb RAM, and 48 Mb of cache
+  - Nodes are connected with Infiniband Fabric
+  - Data was read from and written to global scratch storage which is a Lustre Parallel file system
+  - We requested resources through the SLURM scheduler and for all different combinations of MPI processors and OpenMP threads requested 4Gb of memory for each CPU. In practice we requested 16 cpus per task and set the number of threads with the environment variable `OMP_NUM_THREADS`.
 
 - Software specifics
- - Code was compiled with C++ 14 Standards using Intel C compilers version 18.0.5
- - Intel MPI version 2018 build 4
- - Intel MKL version 2019 build 5
- - xtensor 0.21.5
- - xtensor-blas 0.17.2
- - xtl 0.6.13
- - xsimd 7.4.7
+  - Code was compiled with C++ 14 Standards using Intel C compilers version 18.0.5
+  - Intel MPI version 2018 build 4
+  - Intel MKL version 2019 build 5
+  - xtensor 0.21.5
+  - xtensor-blas 0.17.2
+  - xtl 0.6.13
+  - xsimd 7.4.7
  
 - Compiling and running the tests
- - The source code to run these tests is (`src/lasso_reg_path.cpp`)[src/lasso_reg_path.cpp] 
- - It was compiled with CMake which generates the executable `lasso_reg_path`
- - The script `thread_test.sh` changes the number of MPI processes and OpenMP threads and directs output of the file to a directory that is hard coded in the file.
+  - The source code to run these tests is (`src/lasso_reg_path.cpp`)[src/lasso_reg_path.cpp] 
+  - It was compiled with CMake which generates the executable `lasso_reg_path`
+  - The script `thread_test.sh` changes the number of MPI processes and OpenMP threads and directs output of the file to a directory that is hard coded in the file.
 
 ### Tests
 
@@ -80,7 +80,7 @@ of precomputing matrix operations and running the optimizer but not as strongly
 as increasing the number of MPI processes.
 
 <p align="center">
- <img src="figures/total_speedup.png" height="100">
+ <img src="figures/total_speedup.png" height="500">
 </p>
 
 Next we consider the speedup achieved byusing multiple threads. We see that with
@@ -94,7 +94,7 @@ fabric that connects the nodes of the cluster and that there is relatively littl
 communication between nodes for this problem.
 
 <p align="center">
- <img src="figures/factor_solve_ratio.png" height="100">
+ <img src="figures/factor_solve_ratio.png" height="500">
 </p>
 
 A final performance metric that we consider is the "factor to solve ratio", which in our case

@@ -229,7 +229,7 @@ The figure below shows the breadown of runtime for different numbers of MPI proc
 
 
 <p align="center">
- <img src="figures/time_by_part.png" height="100">
+ <img src="figures/time_by_part.png" height="500">
 </p>
 
 
