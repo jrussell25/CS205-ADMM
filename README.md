@@ -81,7 +81,13 @@ The following chart shows the running time of L1 problem on the harvard cluster 
 | (16000 , 20000) | 247 |
 | (32000 , 40000) | 1824 |
 
-If we want to compress an image of 320000 pixels(figure size around 3MB) into 32000 pixels (size around 0.3MB), it would take 1824 seconds to finish. We need high performance computing and parallelism to optimize the running time. 
+If we want to compress an image of 320000 pixels(figure size around 3MB) into 32000 pixels (size around 0.3MB), it would take 1824 seconds to finish. We need high performance computing and parallelization to optimize the running time. 
+
+# Description of solution and comparison with existing work on the problem
+
+Here we use diferent degree of parallelization to accelerate the existing ADMM method. We firstly implemented sequential ADMM in C++, added MPI function, then used xtensor for numpy style math in C++. Then we used blas (basic linear algebra subprograms) and lapack(linear algebra package) for low level of parallelization.
+We developed our code to run on Havard research computing cluster with intel MPI implementation for distributed memory processing and MKL for multithreaded linear algebra needed for the local optimization steps on each MPI processor. 
+Our result has running time of 40 seconds for matrix A of (640000, 8000) with 64 nodes x 16 cores, which is more than 100x faster than the sequential code.
 
 # Dirtributed ADMM
 
