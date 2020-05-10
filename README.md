@@ -177,9 +177,6 @@ We used [xtensor](https://github.com/xtensor-stack/xtensor), an opensource c++ l
 
 We generate synthetic dataset for both training and testing (see [generate_lasso_data.py](https://github.com/jrussell25/CS205-ADMM/blob/master/generate_lasso_data.py)). Both feature vector and the coefficient matrix are generated as Gaussian random variables. The right-hand-side vector b is computed as the matrix multiplication of the feature and coefficient matrix then corrupted by Gaussian noise. This allows us to easily compare our solution with the ground truth to verify the correctness of our implementation and to tune hyper-parameters for quicker convergence and termination criterion.
 
-# Performance evaluation
-
-
 # Performance Testing
 
 Detailed analysis of the performance of our implementation is in [`performance.md`](performance.md).
