@@ -80,6 +80,7 @@ The following chart shows the running time of L1 problem on the harvard cluster 
 | (8000 , 10000) | 44 |
 | (16000 , 20000) | 247 |
 | (32000 , 40000) | 1824 |
+
 If we want to compress an image of 320000 pixels(figure size around 3MB) into 32000 pixels (size around 0.3MB), it would take 1824 seconds to finish. We need high performance computing and parallelism to optimize the running time. 
 
 # Dirtributed ADMM
